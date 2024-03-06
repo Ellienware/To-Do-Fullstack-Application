@@ -2,6 +2,7 @@ package com.ellienwarecode.ToDOApplication.service;
 
 import com.ellienwarecode.ToDOApplication.dto.ToDoDto;
 import com.ellienwarecode.ToDOApplication.entity.ToDo;
+import com.ellienwarecode.ToDOApplication.exception.Exception;
 import com.ellienwarecode.ToDOApplication.mapper.ToDoMapper;
 import com.ellienwarecode.ToDOApplication.repository.ToDoRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,8 @@ public class ServiceImp implements IService {
 
     @Override
     public ToDoDto getTask(Long id) {
-        ToDo toDo = repository.findById(id).orElseThrow();
+        ToDo toDo = repository.findById(id)
+                .orElseThrow(()-> new Exception("Task by id: "+id+" is not in the system"));
         return ToDoMapper.mapToToDO(toDo);
     }
 
@@ -39,6 +41,10 @@ public class ServiceImp implements IService {
 
     @Override
     public void deleteTask(Long id) {
+        boolean exist = repository.existsById(id);
+        if(!exist){
+            throw new Exception("Task by id: "+id+" is not in the system");
+        }
         repository.deleteById(id);
     }
 
@@ -48,7 +54,13 @@ public class ServiceImp implements IService {
     }
 
     @Override
-    public ToDoDto editTask(ToDoDto toDoDto, Long id) {
-        return null;
+    public void editTask(ToDo toDo, Long id) {
+        ToDo update = repository.findById(id)
+                .orElseThrow(()-> new Exception("Task by id: "+id+" is not in the system"));
+        update.setTitle(toDo.getTitle());
+        update.setDescription(toDo.getDescription());
+        update.isCompleted();
+        update.setDueDateTime(toDo.getDueDateTime());
+        repository.save(update);
     }
 }
